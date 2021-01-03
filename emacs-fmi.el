@@ -69,6 +69,36 @@ calculating the true distance between points."
   "Return Emacs internal TIME formatted as ISO 8601 time."
   (format-time-string "%FT%T%z" time))
 
+(defvar fmi-parameter-dictionary
+  '(("TA_PT1H_AVG" . 'temperature)
+    ("WS_PT1H_AVG" . 'wind-speed)
+    ("RH_PT1H_AVG" . 'relative-humidity)
+    ("PRA_PT1H_ACC" . 'precipitation)))
+
+(defun fmi-read-parameter (feature)
+  "Read parameters from FEATURE."
+  (let ((pname  (-some-> (dom-by-tag feature 'ParameterName)
+                  (dom-children)
+                  (car)
+                  (assoc fmi-parameter-dictionary)
+                  (cdr)))
+        (pval (-> (dom-by-tag feature 'ParameterValue)
+                  (dom-children)
+                  (car))))
+    (when pname
+      `(,pname . ,pval))))
+
+(defun fmi-read-parameters (features)
+  "Read parameters from FEATURES."
+  (seq-reduce
+   (lambda (acc feature)
+     (let ((parameter (fmi-read-parameter feature)))
+       (if parameter
+           (cons parameter acc)
+         acc)))
+   features
+   '()))
+
 (defun fmi-get-weather (fmisid start-time end-time)
   "Get weather for station with FMISID betweeb START-TIME and END-TIME.
 FMSID as string, times as Emacs internal time."
@@ -88,7 +118,9 @@ FMSID as string, times as Emacs internal time."
     (goto-char 0)
     (forward-paragraph)
     (forward-char)
-    (libxml-parse-xml-region (point) (point-max))))
+    (-> (libxml-parse-xml-region (point) (point-max))
+        (dom-by-tag 'member)
+        (fmi-read-parameters))))
 
 (defun fmi-get-weather-stations (network-id)
   "Get a list of weather stations in NETWORK-ID.
