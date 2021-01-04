@@ -5,6 +5,7 @@
 
 (require 'dash)
 (require 'url)
+(require 'dom)
 
 (defun fmi-station-id (station)
   "Return fmisid of the STATION."
@@ -39,6 +40,7 @@
 
 (defun fmi-sort-stations-by-proximity (bbox stations)
   "Sort STATIONS by their proximity to BBOX.
+BBOX is an alist containing 'max-lat', 'min-lat', 'max-lon', 'min-lon'.
 Seems to be most accurate for the nearest stations and lose
 accuracy as distance to the station grows.  This is probably
 because a simplified distance equation is used instead of
