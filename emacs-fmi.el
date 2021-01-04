@@ -99,46 +99,44 @@ calculating the true distance between points."
    features
    '()))
 
-(defun fmi-get-weather (fmisid start-time end-time)
-  "Get weather for station with FMISID betweeb START-TIME and END-TIME.
-FMSID as string, times as Emacs internal time."
+(defun fmi-query-wfs-features (parameters)
+  "Query fmi WFS service with query PARAMETERS.
+PARAMETERS is an alist.
+Return parsed DOM of the response."
   (with-current-buffer
       (url-retrieve-synchronously
        (format
-        "http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::observations::weather::hourly::simple&%s"
+        "http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&%s"
         (mapconcat (lambda (args)
                      (format "%s=%s"
                              (url-hexify-string (car args))
                              (url-hexify-string (cdr args))))
-                   `(("fmisid" . ,fmisid)
-                     ("starttime" . ,(format-iso8601-time start-time))
-                     ("endtime" . ,(format-iso8601-time end-time))
-                     ("maxlocations" . "1"))
-                   "&")))
-    (goto-char 0)
-    (forward-paragraph)
-    (forward-char)
-    (-> (libxml-parse-xml-region (point) (point-max))
-        (dom-by-tag 'member)
-        (fmi-read-parameters))))
-
-(defun fmi-get-weather-stations (network-id)
-  "Get a list of weather stations in NETWORK-ID.
-For example list Automatic Weather Stations using '121'."
-  (with-current-buffer
-      (url-retrieve-synchronously
-       (format
-        "http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::ef::stations&%s"
-        (mapconcat (lambda (args)
-                     (format "%s=%s"
-                             (url-hexify-string (car args))
-                             (url-hexify-string (cdr args))))
-                   `(("networkid" . ,network-id))
+                   parameters
                    "&")))
     (goto-char 0)
     (forward-paragraph)
     (forward-char)
     (libxml-parse-xml-region (point) (point-max))))
+
+(defun fmi-get-weather (fmisid start-time end-time)
+  "Get weather for station with FMISID betweeb START-TIME and END-TIME.
+FMSID as string, times as Emacs internal time."
+  (-> (fmi-query-wfs-features
+       `(("storedQuery" . "fmi::observations::weather::hourly::simple")
+         ("fmisid" . ,fmisid)
+         ("starttime" . ,(format-iso8601-time start-time))
+         ("endtime" . ,(format-iso8601-time end-time))
+         ("maxlocations" . "1")))
+
+      (dom-by-tag 'member)
+      (fmi-read-parameters)))
+
+(defun fmi-get-weather-stations (network-id)
+  "Get a list of weather stations in NETWORK-ID.
+For example list Automatic Weather Stations using '121'."
+  (fmi-query-wfs-features
+   `(("storedquery_id" . "fmi::ef::stations")
+    ("networkid" . ,network-id))))
 
 (defun fmi-get-automatic-weather-stations ()
   "Get a list of automatic weather stations."
@@ -146,21 +144,14 @@ For example list Automatic Weather Stations using '121'."
 
 (defun fmi-get-weather-networks ()
   "Get a list of weather networks."
-  (with-current-buffer
-      (url-retrieve-synchronously
-       "http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::ef::networks&")
-    (goto-char 0)
-    (forward-paragraph)
-    (forward-char)
-    (libxml-parse-xml-region (point) (point-max))))
+  (fmi-query-wfs-features
+   '(("storedQuery" . "fmi::ef::networks"))))
 
 ;;; Stored queries available
 ;;; http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=describeStoredQueries&
 
 ;;; Describes parameter values
 ;;; https://opendata.fmi.fi/meta?observableProperty=observation&param=TA_PT1H_AVG&language=eng
-
-
 
 (provide 'emacs-fmi)
 ;;; emacs-fmi.el ends here
