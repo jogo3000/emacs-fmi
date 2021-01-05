@@ -50,7 +50,7 @@ calculating the true distance between points."
              (vector (fmi-station-location station)
                      (fmi-station-name station)
                      (fmi-station-id station)))
-           stations)
+           (dom-by-tag stations 'member))
    (lambda (s1 s2)
      (let* ((s1-pos (elt s1 0))
             (s2-pos (elt s2 0))
