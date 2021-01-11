@@ -133,6 +133,19 @@ FMSID as string, times as Emacs internal time."
       (dom-by-tag 'member)
       (fmi-read-parameters)))
 
+(defun fmi-get-current-weather-at (location)
+  "Return current weather at LOCATION."
+  (let ((now (current-time)))
+    (-> (fmi-query-wfs-features
+         `(("storedquery_id" . "fmi::observations::weather::hourly::simple")
+           ("place" . ,location)
+           ("starttime" . ,(format-iso8601-time (time-subtract now 3000)))
+           ("endttime" . ,(format-iso8601-time now))
+           ("maxlocations" . "1")))
+
+        (dom-by-tag 'member)
+        (fmi-read-parameters))))
+
 (defun fmi-get-weather-stations (network-id)
   "Get a list of weather stations in NETWORK-ID.
 For example list Automatic Weather Stations using '121'."
