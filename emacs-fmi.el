@@ -124,7 +124,7 @@ Return parsed DOM of the response."
   "Get weather for station with FMISID betweeb START-TIME and END-TIME.
 FMSID as string, times as Emacs internal time."
   (-> (fmi-query-wfs-features
-       `(("storedQuery" . "fmi::observations::weather::hourly::simple")
+       `(("storedquery_id" . "fmi::observations::weather::hourly::simple")
          ("fmisid" . ,fmisid)
          ("starttime" . ,(format-iso8601-time start-time))
          ("endtime" . ,(format-iso8601-time end-time))
@@ -147,7 +147,7 @@ For example list Automatic Weather Stations using '121'."
 (defun fmi-get-weather-networks ()
   "Get a list of weather networks."
   (fmi-query-wfs-features
-   '(("storedQuery" . "fmi::ef::networks"))))
+   '(("storedquery_id" . "fmi::ef::networks"))))
 
 ;;; Stored queries available
 ;;; http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=describeStoredQueries&
