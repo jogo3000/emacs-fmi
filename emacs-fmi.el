@@ -139,7 +139,7 @@ FMSID as string, times as Emacs internal time."
     (-> (fmi-query-wfs-features
          `(("storedquery_id" . "fmi::observations::weather::hourly::simple")
            ("place" . ,location)
-           ("starttime" . ,(format-iso8601-time (time-subtract now 3000)))
+           ("starttime" . ,(format-iso8601-time (time-subtract now 3000))) ; FIXME: doesn't always return anything, too tight time frame?
            ("endttime" . ,(format-iso8601-time now))
            ("maxlocations" . "1")))
 
