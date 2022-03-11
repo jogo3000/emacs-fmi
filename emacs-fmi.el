@@ -1,5 +1,4 @@
 ;;; emacs-fmi.el  --- Fetches weather data from opendata.fmi.fi
-;;;
 ;;; Commentary:
 ;; This package fetches weather data from opendata.fmi.fi.
 ;;; Code:
